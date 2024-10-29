@@ -97,7 +97,11 @@ if ( ! function_exists( 'get_job_listings' ) ) :
 		}
 
 		if ( ! empty( $args['search_location'] ) ) {
-			$location_meta_keys = [ 'geolocation_formatted_address', '_job_location', 'geolocation_state_long' ];
+			if ( apply_filters( 'job_manager_geolocation_enabled', true ) ) {
+				$location_meta_keys = [ 'geolocation_formatted_address', '_job_location', 'geolocation_state_long' ];
+			} else {
+				$location_meta_keys = [ '_job_location' ];
+			}
 			$location_search    = [ 'relation' => 'OR' ];
 			$locations          = explode( ';', $args['search_location'] );
 
@@ -106,11 +110,16 @@ if ( ! function_exists( 'get_job_listings' ) ) :
 				if ( ! empty( $location ) ) {
 					$location_subquery = [ 'relation' => 'OR' ];
 					foreach ( $location_meta_keys as $meta_key ) {
-						$location_subquery[] = [
+						$location_meta_query = [
 							'key'     => $meta_key,
 							'value'   => $location,
 							'compare' => 'like',
 						];
+						if ( apply_filters( 'job_manager_geolocation_enabled', true ) ) {
+							$location_subquery[] = $location_meta_query;
+						} else {
+							$location_subquery = $location_meta_query;
+						}
 					}
 					$location_search[] = $location_subquery;
 				}
